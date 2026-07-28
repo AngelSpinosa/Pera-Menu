@@ -3,28 +3,31 @@
 @tailwind utilities;
 
 /* ============================================================
-   VARIABLES DE MARCA — Neo-Bistro Editorial
+   VARIABLES DE MARCA — Verde & Azul Editorial
    Cambia estos valores para re-brandear la plantilla por cliente.
    ============================================================ */
 :root {
   /* Paleta base */
-  --color-paper: #FBF9F5;       /* fondo crema/papel cálido */
-  --color-paper-dark: #F5F2EB;  /* variante para secciones alternas */
-  --color-ink: #1A1A1A;         /* texto principal */
-  --color-muted: #6B6459;       /* texto secundario / descripciones */
-  --color-line: #E4DFD3;        /* líneas divisorias sutiles */
+  --color-paper: #F5F6EF;       /* fondo claro cálido, neutro */
+  --color-paper-dark: #E9ECDF;  /* variante para secciones alternas */
+  --color-ink: #1B2233;         /* texto principal, azul-negro profundo */
+  --color-muted: #5B6472;       /* texto secundario / descripciones */
+  --color-line: #D6DACE;        /* líneas divisorias sutiles */
 
-  /* Acento: Azul Real Eléctrico por defecto.
-     Para Borgoña Profundo, cambia a: #800020 */
-  --color-accent: #1D4ED8;
-  --color-accent-soft: rgba(29, 78, 216, 0.08);
+  /* Acento principal: Verde (identidad de marca, color primario) */
+  --color-accent: #9EC752;
+  --color-accent-soft: rgba(158, 199, 82, 0.14);
 
-  /* Verde para precios (separado del acento azul de las etiquetas) */
-  --color-price: #1F7A3D;
+  /* Amarillo/verde de apoyo (etiquetas secundarias, "sellos") */
+  --color-yellow: #9EC752;
 
-  /* Tipografía */
-  --font-display: 'Fraunces', 'Playfair Display', Georgia, serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Azul: reservado solo para precios y la etiqueta "Popular" */
+  --color-price: #2A50BC;
+
+  /* Tipografía: Fraunces para todo, usando distintos pesos y su modo
+     italic/óptico para dar el look editorial de la referencia. */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Fraunces', Georgia, 'Times New Roman', serif;
 }
 
 html {
@@ -50,7 +53,23 @@ body {
 /* Línea punteada guía entre nombre y precio */
 .dotted-guide {
   flex: 1;
-  border-bottom: 1.5px dotted var(--color-line);
+  border-bottom: 1.5px dotted var(--color-muted);
+  opacity: 0.5;
   margin: 0 0.5rem;
   transform: translateY(-4px);
+}
+
+/* Tarjeta estilo "recorte de cartelera": fondo claro, borde grueso oscuro,
+   esquinas bien redondeadas — usada para agrupar secciones del menú. */
+.poster-card {
+  background-color: var(--color-paper);
+  border: 2.5px solid var(--color-ink);
+  border-radius: 1.5rem;
+}
+
+/* "Sello" circular tipo sticker, para logos/íconos destacados */
+.poster-stamp {
+  background-color: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  border-radius: 9999px;
 }

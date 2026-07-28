@@ -9,8 +9,8 @@ const { item } = Astro.props;
 const { nombre, descripcion, precio, disponible, etiqueta } = item;
 
 // Todas las etiquetas (Popular, Vegano, Sin Gluten, etc.) usan el mismo
-// estilo azul (color de acento) para mantener consistencia visual.
-const badgeClass = 'bg-accent text-paper';
+// estilo azul (reservado para etiquetas y precios) para mantener consistencia visual.
+const badgeClass = 'bg-price text-paper';
 ---
 
 <li

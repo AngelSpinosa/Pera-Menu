@@ -10,12 +10,12 @@ import type { MenuItemRaw, MenuItemData, CategoryGroup } from '../types';
 // CONFIGURACIÓN DE MARCA — edita estos valores por cliente
 // (o muévelos a variables de entorno PUBLIC_* si lo prefieres)
 // ============================================================
-const NOMBRE_LOCAL = import.meta.env.PUBLIC_NOMBRE_LOCAL || 'Casa Fauna';
-const ESLOGAN = import.meta.env.PUBLIC_ESLOGAN || 'Come for the brew, stay for the vibes.';
+const NOMBRE_LOCAL = import.meta.env.PUBLIC_NOMBRE_LOCAL || 'Pera Café';
+const ESLOGAN = import.meta.env.PUBLIC_ESLOGAN || 'Café de especialidad';
 const HORARIO = import.meta.env.PUBLIC_HORARIO || 'Lun–Dom · 8:00–20:00';
-const UBICACION = import.meta.env.PUBLIC_UBICACION || 'Roma Norte, CDMX';
+const UBICACION = import.meta.env.PUBLIC_UBICACION || 'Xalapa, Veracruz';
 const WHATSAPP = import.meta.env.PUBLIC_WHATSAPP || '5215500000000';
-const INSTAGRAM = import.meta.env.PUBLIC_INSTAGRAM || 'casafauna';
+const INSTAGRAM = import.meta.env.PUBLIC_INSTAGRAM || 'peracafemx';
 
 // ============================================================
 // INTEGRACIÓN GOOGLE SHEETS (vía opensheet.elk.sh)
@@ -97,17 +97,17 @@ const navCategorias = categorias.map(({ categoria, slug }) => ({ categoria, slug
 
   <CategoryNav categorias={navCategorias} />
 
-  <main class="max-w-xl mx-auto px-5 pb-4">
+  <main class="max-w-xl mx-auto px-5 pb-10">
     {fetchError && (
-      <p class="text-xs text-center text-muted italic mt-4 mb-2">
+      <p class="text-xs text-center text-muted italic mt-5 mb-2 border border-accent/25 bg-accent-soft rounded-full px-4 py-2">
         Mostrando menú de ejemplo — conecta tu Google Sheet (PUBLIC_GOOGLE_SHEET_ID) para ver tus productos reales.
       </p>
     )}
 
     {categorias.map(({ categoria, slug, items }) => (
-      <section id={`cat-${slug}`} data-category-section={slug} class="scroll-mt-16 pt-8 first:pt-6">
-        <h2 class="font-display text-2xl text-ink mb-1">{categoria}</h2>
-        <div class="h-px w-12 bg-accent mb-2"></div>
+      <section id={`cat-${slug}`} data-category-section={slug} class="scroll-mt-16 pt-10 first:pt-7">
+        <h2 class="font-display italic font-semibold text-3xl text-ink mb-2">{categoria}</h2>
+        <div class="h-[3px] w-14 rounded-full mb-5" style="background: linear-gradient(90deg, var(--color-accent), var(--color-price));"></div>
         <ul>
           {items.map((item) => (
             <MenuItem item={item} />
@@ -117,7 +117,9 @@ const navCategorias = categorias.map(({ categoria, slug }) => ({ categoria, slug
     ))}
 
     {categorias.length === 0 && (
-      <p class="text-center text-muted py-16">No hay productos disponibles por el momento.</p>
+      <p class="text-center text-muted font-display italic text-lg py-16">
+        No hay productos disponibles por el momento.
+      </p>
     )}
   </main>
 
