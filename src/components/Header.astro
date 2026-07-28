@@ -1,0 +1,42 @@
+---
+interface Props {
+  nombre: string;
+  eslogan: string;
+  horario: string;
+  ubicacion?: string;
+}
+
+const { nombre, eslogan, horario, ubicacion = 'Roma Norte, CDMX' } = Astro.props;
+---
+
+<header class="px-6 pt-10 pb-8 text-center border-b border-line">
+  <p class="text-xs tracking-[0.25em] uppercase text-muted mb-3">
+    Menú digital
+  </p>
+
+  <h1 class="font-display text-4xl sm:text-5xl leading-[1.05] tracking-tightest2 text-ink mb-3">
+    {nombre}
+  </h1>
+
+  <p class="font-display italic text-xl text-accent mb-5">
+    {eslogan}
+  </p>
+
+  <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-base text-muted">
+    <span class="flex items-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 3" stroke-linecap="round" />
+      </svg>
+      {horario}
+    </span>
+    <span aria-hidden="true">·</span>
+    <span class="flex items-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+        <circle cx="12" cy="10" r="2.4" />
+      </svg>
+      {ubicacion}
+    </span>
+  </div>
+</header>

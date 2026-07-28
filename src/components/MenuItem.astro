@@ -1,0 +1,44 @@
+---
+import type { MenuItemData } from '../types';
+
+interface Props {
+  item: MenuItemData;
+}
+
+const { item } = Astro.props;
+const { nombre, descripcion, precio, disponible, etiqueta } = item;
+
+// Todas las etiquetas (Popular, Vegano, Sin Gluten, etc.) usan el mismo
+// estilo azul (color de acento) para mantener consistencia visual.
+const badgeClass = 'bg-accent text-paper';
+---
+
+<li
+  class:list={[
+    'flex flex-col gap-1 py-4 border-b border-line last:border-b-0 transition-opacity',
+    !disponible && 'opacity-45 pointer-events-none select-none',
+  ]}
+>
+  <div class="flex items-baseline">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-display text-xl font-medium text-ink">{nombre}</span>
+      {etiqueta && disponible && (
+        <span class={`text-xs uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full ${badgeClass}`}>
+          {etiqueta}
+        </span>
+      )}
+    </div>
+    <span class="dotted-guide" aria-hidden="true"></span>
+    <span class="font-display italic text-xl font-medium text-price shrink-0">
+      {precio}
+    </span>
+  </div>
+
+  {descripcion && (
+    <p class="text-base text-muted leading-snug pr-2">{descripcion}</p>
+  )}
+
+  {!disponible && (
+    <p class="text-sm font-semibold text-ink/60 italic">Agotado por hoy</p>
+  )}
+</li>

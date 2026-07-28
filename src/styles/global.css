@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   VARIABLES DE MARCA — Neo-Bistro Editorial
+   Cambia estos valores para re-brandear la plantilla por cliente.
+   ============================================================ */
+:root {
+  /* Paleta base */
+  --color-paper: #FBF9F5;       /* fondo crema/papel cálido */
+  --color-paper-dark: #F5F2EB;  /* variante para secciones alternas */
+  --color-ink: #1A1A1A;         /* texto principal */
+  --color-muted: #6B6459;       /* texto secundario / descripciones */
+  --color-line: #E4DFD3;        /* líneas divisorias sutiles */
+
+  /* Acento: Azul Real Eléctrico por defecto.
+     Para Borgoña Profundo, cambia a: #800020 */
+  --color-accent: #1D4ED8;
+  --color-accent-soft: rgba(29, 78, 216, 0.08);
+
+  /* Verde para precios (separado del acento azul de las etiquetas) */
+  --color-price: #1F7A3D;
+
+  /* Tipografía */
+  --font-display: 'Fraunces', 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--color-paper);
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+}
+
+/* Oculta scrollbar en la nav de categorías sin perder funcionalidad */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Línea punteada guía entre nombre y precio */
+.dotted-guide {
+  flex: 1;
+  border-bottom: 1.5px dotted var(--color-line);
+  margin: 0 0.5rem;
+  transform: translateY(-4px);
+}

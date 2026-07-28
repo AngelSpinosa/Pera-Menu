@@ -1,0 +1,125 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import CategoryNav from '../components/CategoryNav.astro';
+import MenuItem from '../components/MenuItem.astro';
+import Footer from '../components/Footer.astro';
+import type { MenuItemRaw, MenuItemData, CategoryGroup } from '../types';
+
+// ============================================================
+// CONFIGURACIÓN DE MARCA — edita estos valores por cliente
+// (o muévelos a variables de entorno PUBLIC_* si lo prefieres)
+// ============================================================
+const NOMBRE_LOCAL = import.meta.env.PUBLIC_NOMBRE_LOCAL || 'Casa Fauna';
+const ESLOGAN = import.meta.env.PUBLIC_ESLOGAN || 'Come for the brew, stay for the vibes.';
+const HORARIO = import.meta.env.PUBLIC_HORARIO || 'Lun–Dom · 8:00–20:00';
+const UBICACION = import.meta.env.PUBLIC_UBICACION || 'Roma Norte, CDMX';
+const WHATSAPP = import.meta.env.PUBLIC_WHATSAPP || '5215500000000';
+const INSTAGRAM = import.meta.env.PUBLIC_INSTAGRAM || 'casafauna';
+
+// ============================================================
+// INTEGRACIÓN GOOGLE SHEETS (vía opensheet.elk.sh)
+// ============================================================
+const SHEET_ID = import.meta.env.PUBLIC_GOOGLE_SHEET_ID || 'TU_ID_DE_PRUEBA';
+
+let rawData: MenuItemRaw[] = [];
+let fetchError = false;
+
+try {
+  const response = await fetch(`https://opensheet.elk.sh/${SHEET_ID}/Hoja1`);
+  if (!response.ok) throw new Error(`Respuesta ${response.status}`);
+  rawData = await response.json();
+  if (!Array.isArray(rawData)) throw new Error('Formato inesperado');
+} catch (err) {
+  fetchError = true;
+  // Datos de respaldo para que la plantilla siempre sea visible/demostrable
+  rawData = [
+    { id: '1', categoria: 'Bebidas Calientes', nombre: 'Espresso', descripcion: 'Doble shot, tueste medio, notas a chocolate y nuez.', precio: '$45', disponible: 'TRUE', etiqueta: 'Popular' },
+    { id: '2', categoria: 'Bebidas Calientes', nombre: 'Latte de Lavanda', descripcion: 'Leche entera vaporizada con infusión floral de lavanda.', precio: '$68', disponible: 'TRUE', etiqueta: '' },
+    { id: '3', categoria: 'Bebidas Calientes', nombre: 'Chai Casero', descripcion: 'Especias enteras, jengibre fresco y leche de avena.', precio: '$62', disponible: 'FALSE', etiqueta: 'Vegano' },
+    { id: '4', categoria: 'Panadería', nombre: 'Croissant de Mantequilla', descripcion: 'Horneado en casa cada mañana, 63 capas de hojaldre.', precio: '$58', disponible: 'TRUE', etiqueta: 'Popular' },
+    { id: '5', categoria: 'Panadería', nombre: 'Muffin de Arándano', descripcion: 'Con streusel de avena y ralladura de limón.', precio: '$52', disponible: 'TRUE', etiqueta: '' },
+    { id: '6', categoria: 'Panadería', nombre: 'Pan Sin Gluten', descripcion: 'Masa madre libre de gluten, horneada por pedido.', precio: '$65', disponible: 'TRUE', etiqueta: 'Sin Gluten' },
+    { id: '7', categoria: 'Desayunos', nombre: 'Avocado Toast', descripcion: 'Pan de masa madre, aguacate, chile de árbol, limón.', precio: '$115', disponible: 'TRUE', etiqueta: 'Vegano' },
+    { id: '8', categoria: 'Desayunos', nombre: 'Huevos Benedictinos', descripcion: 'Muffin inglés, jamón serrano, salsa holandesa casera.', precio: '$145', disponible: 'TRUE', etiqueta: '' },
+  ];
+}
+
+// ============================================================
+// TRANSFORMACIÓN Y AGRUPACIÓN
+// ============================================================
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function toBool(value: string | boolean | undefined): boolean {
+  if (typeof value === 'boolean') return value;
+  return String(value).trim().toUpperCase() === 'TRUE';
+}
+
+const items: MenuItemData[] = rawData.map((row) => ({
+  id: row.id,
+  categoria: row.categoria?.trim() || 'Otros',
+  nombre: row.nombre,
+  descripcion: row.descripcion,
+  precio: row.precio,
+  disponible: toBool(row.disponible),
+  etiqueta: row.etiqueta?.trim() || undefined,
+}));
+
+const categoryOrder: string[] = [];
+const grouped: Record<string, MenuItemData[]> = {};
+
+for (const item of items) {
+  if (!grouped[item.categoria]) {
+    grouped[item.categoria] = [];
+    categoryOrder.push(item.categoria);
+  }
+  grouped[item.categoria].push(item);
+}
+
+const categorias: CategoryGroup[] = categoryOrder.map((categoria) => ({
+  categoria,
+  slug: slugify(categoria),
+  items: grouped[categoria],
+}));
+
+const navCategorias = categorias.map(({ categoria, slug }) => ({ categoria, slug }));
+---
+
+<Layout title={`${NOMBRE_LOCAL} — Menú`} description={ESLOGAN}>
+  <Header nombre={NOMBRE_LOCAL} eslogan={ESLOGAN} horario={HORARIO} ubicacion={UBICACION} />
+
+  <CategoryNav categorias={navCategorias} />
+
+  <main class="max-w-xl mx-auto px-5 pb-4">
+    {fetchError && (
+      <p class="text-xs text-center text-muted italic mt-4 mb-2">
+        Mostrando menú de ejemplo — conecta tu Google Sheet (PUBLIC_GOOGLE_SHEET_ID) para ver tus productos reales.
+      </p>
+    )}
+
+    {categorias.map(({ categoria, slug, items }) => (
+      <section id={`cat-${slug}`} data-category-section={slug} class="scroll-mt-16 pt-8 first:pt-6">
+        <h2 class="font-display text-2xl text-ink mb-1">{categoria}</h2>
+        <div class="h-px w-12 bg-accent mb-2"></div>
+        <ul>
+          {items.map((item) => (
+            <MenuItem item={item} />
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {categorias.length === 0 && (
+      <p class="text-center text-muted py-16">No hay productos disponibles por el momento.</p>
+    )}
+  </main>
+
+  <Footer whatsapp={WHATSAPP} instagram={INSTAGRAM} />
+</Layout>
