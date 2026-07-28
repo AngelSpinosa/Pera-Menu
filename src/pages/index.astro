@@ -62,15 +62,17 @@ function toBool(value: string | boolean | undefined): boolean {
   return String(value).trim().toUpperCase() === 'TRUE';
 }
 
-const items: MenuItemData[] = rawData.map((row) => ({
-  id: row.id,
-  categoria: row.categoria?.trim() || 'Otros',
-  nombre: row.nombre,
-  descripcion: row.descripcion,
-  precio: row.precio,
-  disponible: toBool(row.disponible),
-  etiqueta: row.etiqueta?.trim() || undefined,
-}));
+const items: MenuItemData[] = rawData
+  .filter((row) => row.nombre && row.nombre.trim() !== '')
+  .map((row) => ({
+    id: row.id,
+    categoria: row.categoria?.trim() || 'Otros',
+    nombre: row.nombre,
+    descripcion: row.descripcion,
+    precio: row.precio,
+    disponible: toBool(row.disponible),
+    etiqueta: row.etiqueta?.trim() || undefined,
+  }));
 
 const categoryOrder: string[] = [];
 const grouped: Record<string, MenuItemData[]> = {};
