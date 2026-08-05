@@ -18,6 +18,13 @@ const WHATSAPP = import.meta.env.PUBLIC_WHATSAPP || '5215500000000';
 const INSTAGRAM = import.meta.env.PUBLIC_INSTAGRAM || 'peracafemx';
 
 // ============================================================
+// LIBRO: cuántos productos caben cómodamente en una "hoja" antes
+// de partir la categoría en varias páginas. Ajusta según qué tan
+// largas sean tus descripciones (menos items si son descripciones largas).
+// ============================================================
+const MAX_ITEMS_PER_PAGE = 4;
+
+// ============================================================
 // INTEGRACIÓN GOOGLE SHEETS (vía opensheet.elk.sh)
 // ============================================================
 const SHEET_ID = import.meta.env.PUBLIC_GOOGLE_SHEET_ID || '1n3MHumEulbn1G3U1E7hSHUFYJ-u0St3g0DmSh_pK3Q8';
@@ -91,7 +98,47 @@ const categorias: CategoryGroup[] = categoryOrder.map((categoria) => ({
   items: grouped[categoria],
 }));
 
-const navCategorias = categorias.map(({ categoria, slug }) => ({ categoria, slug }));
+// ============================================================
+// PAGINACIÓN DEL "LIBRO"
+// Cada categoría se parte en una o varias "hojas" (páginas) según
+// MAX_ITEMS_PER_PAGE. El libro completo es la concatenación de
+// todas las hojas de todas las categorías, en orden.
+// ============================================================
+interface BookPage {
+  categoria: string;
+  slug: string;
+  globalIndex: number;
+  pageInCategory: number;
+  totalPagesInCategory: number;
+  items: MenuItemData[];
+}
+
+const paginas: BookPage[] = [];
+
+categorias.forEach(({ categoria, slug, items }) => {
+  const chunks: MenuItemData[][] = [];
+  for (let i = 0; i < items.length; i += MAX_ITEMS_PER_PAGE) {
+    chunks.push(items.slice(i, i + MAX_ITEMS_PER_PAGE));
+  }
+  if (chunks.length === 0) chunks.push([]);
+
+  chunks.forEach((chunkItems, idx) => {
+    paginas.push({
+      categoria,
+      slug,
+      globalIndex: paginas.length,
+      pageInCategory: idx,
+      totalPagesInCategory: chunks.length,
+      items: chunkItems,
+    });
+  });
+});
+
+// Para el nav: cada categoría "salta" a su primera hoja
+const navCategorias = categorias.map(({ categoria, slug }) => {
+  const firstPageIndex = paginas.findIndex((p) => p.slug === slug);
+  return { categoria, slug, firstPageIndex };
+});
 ---
 
 <Layout title={`${NOMBRE_LOCAL} — Menú`} description={ESLOGAN}>
@@ -106,19 +153,52 @@ const navCategorias = categorias.map(({ categoria, slug }) => ({ categoria, slug
       </p>
     )}
 
-    {categorias.map(({ categoria, slug, items }) => (
-      <section id={`cat-${slug}`} data-category-section={slug} class="scroll-mt-16 pt-10 first:pt-7">
-        <h2 class="font-display italic font-semibold text-3xl text-ink mb-2">{categoria}</h2>
-        <div class="h-[3px] w-14 rounded-full mb-5" style="background: linear-gradient(90deg, var(--color-accent), var(--color-price));"></div>
-        <ul>
-          {items.map((item) => (
-            <MenuItem item={item} />
-          ))}
-        </ul>
-      </section>
-    ))}
+    {paginas.length > 0 && (
+      <div class="book-wrapper">
+        <div id="book" class="book">
+          {paginas.map((pagina) => (
+            <section
+              class="book-page"
+              data-slug={pagina.slug}
+              data-global-index={pagina.globalIndex}
+              aria-hidden="true"
+            >
+              <h2 class="font-display italic font-semibold text-3xl text-ink mb-1">
+                {pagina.categoria}
+              </h2>
 
-    {categorias.length === 0 && (
+              {pagina.totalPagesInCategory > 1 && (
+                <p class="text-xs text-muted mb-3">
+                  Página {pagina.pageInCategory + 1} de {pagina.totalPagesInCategory}
+                </p>
+              )}
+
+              <div
+                class="h-[3px] w-14 rounded-full mb-5"
+                style="background: linear-gradient(90deg, var(--color-accent), var(--color-price));"
+              />
+
+              <ul>
+                {pagina.items.map((item) => (
+                  <MenuItem item={item} />
+                ))}
+              </ul>
+
+              {pagina.items.length === 0 && (
+                <p class="text-center text-muted italic py-10">
+                  No hay productos en esta categoría.
+                </p>
+              )}
+            </section>
+          ))}
+        </div>
+
+        <!-- Puntos indicadores de hoja, solo quando la categoría activa tiene más de 1 página -->
+        <div id="page-dots" class="flex items-center justify-center gap-1.5 mt-3" aria-hidden="true"></div>
+      </div>
+    )}
+
+    {paginas.length === 0 && (
       <p class="text-center text-muted font-display italic text-lg py-16">
         No hay productos disponibles por el momento.
       </p>
@@ -127,3 +207,172 @@ const navCategorias = categorias.map(({ categoria, slug }) => ({ categoria, slug
 
   <Footer whatsapp={WHATSAPP} instagram={INSTAGRAM} />
 </Layout>
+
+<script>
+  // ============================================================
+  // CONTROLADOR DEL "LIBRO": maneja qué página está activa,
+  // el efecto de flip (CSS transform), el swipe táctil y
+  // sincroniza la pestaña activa del CategoryNav.
+  // ============================================================
+  const book = document.getElementById('book');
+  const pages = Array.from(document.querySelectorAll<HTMLElement>('.book-page'));
+  const tabs = Array.from(document.querySelectorAll<HTMLAnchorElement>('.nav-tab'));
+  const dotsContainer = document.getElementById('page-dots');
+
+  let current = 0;
+  let animating = false;
+
+  function setActiveTab(slug: string | undefined) {
+    if (!slug) return;
+    tabs.forEach((tab) => {
+      const active = tab.dataset.slug === slug;
+      tab.classList.toggle('is-active', active);
+      tab.classList.toggle('bg-accent', active);
+      tab.classList.toggle('text-paper', active);
+      tab.classList.toggle('border-accent', active);
+      tab.classList.toggle('bg-transparent', !active);
+      tab.classList.toggle('text-ink', !active);
+      tab.classList.toggle('border-line', !active);
+      if (active) {
+        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    });
+  }
+
+  function renderDots(activePage: HTMLElement) {
+    if (!dotsContainer) return;
+    const slug = activePage.dataset.slug;
+    const siblings = pages.filter((p) => p.dataset.slug === slug);
+    dotsContainer.innerHTML = '';
+    if (siblings.length <= 1) return;
+
+    siblings.forEach((p) => {
+      const dot = document.createElement('span');
+      const isCurrent = p === activePage;
+      dot.className = isCurrent
+        ? 'w-2 h-2 rounded-full bg-accent'
+        : 'w-2 h-2 rounded-full bg-line';
+      dotsContainer.appendChild(dot);
+    });
+  }
+
+  function resetPageStyles(page: HTMLElement) {
+    page.style.transition = '';
+    page.style.transform = '';
+    page.style.opacity = '';
+  }
+
+  function goToPage(index: number, direction?: 'forward' | 'backward') {
+    if (animating || index < 0 || index >= pages.length || index === current) return;
+
+    const outgoing = pages[current];
+    const incoming = pages[index];
+    const dir = direction || (index > current ? 'forward' : 'backward');
+
+    animating = true;
+
+    // Coloca la página entrante "de perfil" (sin transición) antes de animar
+    incoming.style.transition = 'none';
+    incoming.style.transform = dir === 'forward' ? 'rotateY(90deg)' : 'rotateY(-90deg)';
+    incoming.style.opacity = '0';
+    incoming.classList.add('book-page--active');
+
+    // Fuerza reflow para que el navegador registre el estado inicial
+    void incoming.offsetWidth;
+
+    // Ahora sí anima hacia el estado final
+    incoming.style.transition = '';
+    incoming.style.transformOrigin = dir === 'forward' ? 'right center' : 'left center';
+    incoming.style.transform = 'rotateY(0deg)';
+    incoming.style.opacity = '1';
+
+    outgoing.style.transformOrigin = dir === 'forward' ? 'left center' : 'right center';
+    outgoing.classList.add(dir === 'forward' ? 'flip-out-forward' : 'flip-out-backward');
+
+    const cleanup = () => {
+      outgoing.classList.remove('book-page--active', 'flip-out-forward', 'flip-out-backward');
+      resetPageStyles(outgoing);
+      resetPageStyles(incoming);
+      animating = false;
+      outgoing.removeEventListener('transitionend', cleanup);
+    };
+
+    outgoing.addEventListener('transitionend', cleanup);
+    // Respaldo por si transitionend no dispara (ej. pestaña en background)
+    setTimeout(cleanup, 550);
+
+    current = index;
+    setActiveTab(incoming.dataset.slug);
+    renderDots(incoming);
+  }
+
+  // Estado inicial
+  if (pages[0]) {
+    pages[0].classList.add('book-page--active');
+    renderDots(pages[0]);
+  }
+  if (tabs[0]) setActiveTab(tabs[0].dataset.slug);
+
+  // Click en pestañas del nav
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = parseInt(tab.dataset.firstPageIndex ?? '0', 10);
+      if (!Number.isNaN(target)) goToPage(target);
+    });
+  });
+
+  // ============================================================
+  // SWIPE HORIZONTAL (táctil) — pasar de página deslizando el dedo.
+  // Se distingue de scroll vertical: solo bloquea el scroll de la
+  // página cuando el gesto es claramente horizontal.
+  // ============================================================
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let isSwiping = false;
+  let isHorizontal = false;
+
+  book?.addEventListener(
+    'touchstart',
+    (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      isSwiping = true;
+      isHorizontal = false;
+    },
+    { passive: true }
+  );
+
+  book?.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!isSwiping) return;
+      const dx = e.touches[0].clientX - touchStartX;
+      const dy = e.touches[0].clientY - touchStartY;
+
+      if (!isHorizontal && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+        isHorizontal = true;
+      }
+      if (isHorizontal) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  book?.addEventListener('touchend', (e) => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    if (!isHorizontal) return;
+
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const SWIPE_THRESHOLD = 45;
+    if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+
+    if (dx < 0) {
+      goToPage(current + 1, 'forward');
+    } else {
+      goToPage(current - 1, 'backward');
+    }
+  });
+</script>

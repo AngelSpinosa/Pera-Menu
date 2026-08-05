@@ -1,6 +1,6 @@
 ---
 interface Props {
-  categorias: { categoria: string; slug: string }[];
+  categorias: { categoria: string; slug: string; firstPageIndex: number }[];
 }
 
 const { categorias } = Astro.props;
@@ -12,10 +12,11 @@ const { categorias } = Astro.props;
   aria-label="Categorías del menú"
 >
   <div class="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3 snap-x snap-mandatory justify-center w-full">
-    {categorias.map(({ categoria, slug }, i) => (
+    {categorias.map(({ categoria, slug, firstPageIndex }, i) => (
       <a
         href={`#cat-${slug}`}
         data-slug={slug}
+        data-first-page-index={firstPageIndex}
         class:list={[
           'nav-tab snap-start shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-base font-medium border transition-colors',
           i === 0
@@ -29,46 +30,10 @@ const { categorias } = Astro.props;
   </div>
 </nav>
 
-<script>
-  // JS vanilla hiperligero: resalta la pestaña activa según la categoría
-  // visible en pantalla, y hace scroll de la pestaña dentro de la nav.
-  const tabs = Array.from(document.querySelectorAll<HTMLAnchorElement>('.nav-tab'));
-  const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-category-section]'));
-
-  function setActive(slug: string) {
-    tabs.forEach((tab) => {
-      const active = tab.dataset.slug === slug;
-      tab.classList.toggle('is-active', active);
-      tab.classList.toggle('bg-accent', active);
-      tab.classList.toggle('text-paper', active);
-      tab.classList.toggle('border-accent', active);
-      tab.classList.toggle('bg-transparent', !active);
-      tab.classList.toggle('text-ink', !active);
-      tab.classList.toggle('border-line', !active);
-      if (active) {
-        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
-    });
-  }
-
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      if (tab.dataset.slug) setActive(tab.dataset.slug);
-    });
-  });
-
-  if ('IntersectionObserver' in window && sections.length) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const slug = (entry.target as HTMLElement).dataset.categorySection;
-            if (slug) setActive(slug);
-          }
-        });
-      },
-      { rootMargin: '-45% 0px -50% 0px', threshold: 0 }
-    );
-    sections.forEach((section) => observer.observe(section));
-  }
-</script>
+<!--
+  Nota: este componente ya NO controla el estado activo por sí mismo
+  (antes usaba scroll + IntersectionObserver). Ahora es "tonto":
+  solo renderiza los botones. El controlador del libro (en index.astro)
+  escucha los clicks y decide a qué página saltar, además de encargarse
+  de resaltar la pestaña activa.
+-->

@@ -73,3 +73,87 @@ body {
   border: 2px solid var(--color-ink);
   border-radius: 9999px;
 }
+
+/* ============================================================
+   EFECTO "LIBRO" — contenedor de páginas con flip 3D
+   Mobile-first: una sola página visible a la vez, dentro de un
+   marco de altura fija (como las hojas de un libro físico).
+   ============================================================ */
+
+.book-wrapper {
+  margin-top: 1.5rem;
+}
+
+.book {
+  position: relative;
+  max-width: 36rem;
+  margin: 0 auto;
+  height: 70dvh;
+  min-height: 420px;
+  max-height: 640px;
+  perspective: 1800px;
+}
+
+.book-page {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  padding: 1.75rem 1.25rem 2.5rem;
+  border-radius: 1rem;
+  background-color: var(--color-paper);
+
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transition: transform 0.5s cubic-bezier(0.45, 0, 0.55, 1), opacity 0.35s ease;
+}
+
+.book-page--active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+/* Página saliente: se "cierra" de perfil hacia el lado por el que se fue */
+.flip-out-forward {
+  transform: rotateY(-100deg);
+  opacity: 0;
+  box-shadow: inset 24px 0 40px -24px rgba(27, 34, 51, 0.28);
+}
+
+.flip-out-backward {
+  transform: rotateY(100deg);
+  opacity: 0;
+  box-shadow: inset -24px 0 40px -24px rgba(27, 34, 51, 0.28);
+}
+
+/* En pantallas más anchas (tablet/desktop) le damos un poco más de aire
+   y una sombra sutil de "libro apoyado en la mesa" */
+@media (min-width: 640px) {
+  .book {
+    height: 65dvh;
+  }
+  .book-page {
+    box-shadow: 0 12px 30px -12px rgba(27, 34, 51, 0.18);
+    border: 1px solid var(--color-line);
+  }
+}
+
+/* Respeta preferencia de reducción de movimiento: sin flip 3D, solo fade */
+@media (prefers-reduced-motion: reduce) {
+  .book-page {
+    transition: opacity 0.25s ease;
+    transform: none !important;
+  }
+  .flip-out-forward,
+  .flip-out-backward {
+    box-shadow: none;
+  }
+}
